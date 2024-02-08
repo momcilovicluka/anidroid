@@ -78,14 +78,14 @@ public class HomeFragment extends Fragment {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 5) {
+                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 1) {
                     isLoading = true;
                     loadAnimeData(currentPage++);
                 }
             }
         });
 
-        loadAnimeData(currentPage);
+        loadAnimeData(currentPage++);
 
         return view;
     }
@@ -98,6 +98,7 @@ public class HomeFragment extends Fragment {
     private void fetchAnimeData(List<Anime> animeList, int page) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
+        isLoading = true;
 
         executor.execute(() -> {
             try {
@@ -137,10 +138,12 @@ public class HomeFragment extends Fragment {
                 }
 
                 handler.post(() -> {
+                    //animeList.clear();
                     animeList.addAll(newAnimeList);
                     Log.d("HomeFragment", "Number of anime in the newlist: " + newAnimeList.size());
                     Log.d("HomeFragment", "Number of anime in the list: " + animeList.size());
-                    animeAdapter.notifyDataSetChanged();
+                    //animeAdapter.notifyDataSetChanged();
+                    animeAdapter.notifyItemRangeInserted(animeList.size() - newAnimeList.size(), newAnimeList.size());
                     isLoading = false;
                 });
 
