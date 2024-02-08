@@ -1,33 +1,68 @@
 package com.luka.anidroid.fragment;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luka.anidroid.R;
 import com.luka.anidroid.adapter.AnimeAdapter;
 import com.luka.anidroid.model.Anime;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 // HomeFragment.java
 public class HomeFragment extends Fragment {
 
+    OkHttpClient client = new OkHttpClient();
+    ObjectMapper objectMapper = new ObjectMapper();
     private RecyclerView recyclerView;
     private AnimeAdapter animeAdapter;
     private List<Anime> animeList;
     private boolean isLoading = false;
     private int currentPage = 1;
 
+    private static final String STATE_ANIME_LIST = "state_anime_list";
+    private static final String STATE_CURRENT_PAGE = "state_current_page";
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(STATE_ANIME_LIST, new ArrayList<>(animeList));
+        outState.putInt(STATE_CURRENT_PAGE, currentPage);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            animeList = savedInstanceState.getParcelableArrayList(STATE_ANIME_LIST);
+            currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE);
+        } else {
+            animeList = new ArrayList<>();
+            currentPage = 1;
+        }
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -43,10 +78,9 @@ public class HomeFragment extends Fragment {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 1) {
-                    // End of the list is reached, load more data
-                    loadAnimeData(currentPage + 1);
+                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 5) {
                     isLoading = true;
+                    loadAnimeData(currentPage++);
                 }
             }
         });
@@ -57,19 +91,65 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadAnimeData(int page) {
-        // Make network request to Anilist API, add data to animeList, and notify adapter
-// Make network request to Anilist API, add data to animeList, and notify adapter
-        // MOCK DATA
         Log.d("HomeFragment", "Loading page " + page);
-        animeList.add(new Anime("Naruto", "https://cdn.myanimelist.net/images/anime/13/17405.jpg", "Naruto is a young shinobi with an incorrigible knack for mischief. He’s got a wild sense of humor, but Naruto is completely serious about his mission to be the world’s greatest ninja!", 2002, "TV"));
-        animeList.add(new Anime("Naruto: Shippuden", "https://cdn.myanimelist.net/images/anime/5/17407.jpg", "Naruto: Shippuuden is the continuation of the original animated TV series Naruto. The story revolves around an older and slightly more matured Uzumaki Naruto and his quest to save his friend Uchiha Sasuke from the grips of the snake-like Shinobi, Orochimaru.", 2007, "TV"));
-        animeList.add(new Anime("Evangelion: 3.0+1.0 Thrice Upon a Time", "https://cdn.myanimelist.net/images/anime/1000/110531.jpg", "The fourth and final film in the Rebuild of Evangelion series.", 2021, "Movie"));
-        animeList.add(new Anime("Attack on Titan", "https://cdn.myanimelist.net/images/anime/10/47347.jpg", "Several hundred years ago, humans were nearly exterminated by Titans. Titans are typically several stories tall, seem to have no intelligence, devour human beings and, worst of all, seem to do it for the pleasure rather than as a food source.", 2013, "TV"));
-        animeList.add(new Anime("One Piece", "https://cdn.myanimelist.net/images/anime/6/73245.jpg", "Gol D. Roger was known as the Pirate King, the strongest and most infamous being to have sailed the Grand Line. The capture and execution of Roger by the World Government brought a change throughout the world.", 1999, "TV"));
-        animeList.add(new Anime("Demon Slayer: Kimetsu no Yaiba", "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", "Ever since the death of his father, the burden of supporting the family has fallen upon Tanjirou Kamado's shoulders. Though living impoverished on a remote mountain, the Kamado family are able to enjoy a relatively peaceful and happy life.", 2019, "TV"));
+        fetchAnimeData(animeList, page);
+    }
 
-        Log.d("HomeFragment", "Data loaded, notifying adapter");
-        animeAdapter.notifyItemInserted(animeList.size() - 1);
-        isLoading = false;
+    private void fetchAnimeData(List<Anime> animeList, int page) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+            try {
+                Request request = new Request.Builder()
+                        .url("https://api.jikan.moe/v4/top/anime" + "?page=" + page)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                String responseBody = response.body().string();
+
+                // if the response is not successful, throw an exception
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+                Log.d("HomeFragment", "Response: " + responseBody);
+
+                JsonNode root = objectMapper.readTree(responseBody);
+                List<Anime> newAnimeList = new ArrayList<>();
+
+                JsonNode data = root.get("data");
+                JSONArray jsonArray;
+                try {
+                    jsonArray = new JSONArray(data.toString());
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JsonNode animeNode = data.get(i);
+                    Anime anime = new Anime();
+                    anime.setId(animeNode.get("mal_id").asInt());
+                    anime.setTitle(animeNode.get("title").asText());
+                    anime.setDescription(animeNode.get("synopsis").asText());
+                    anime.setImageUrl(animeNode.get("images").get("jpg").get("image_url").asText());
+                    anime.setAverageScore(animeNode.get("score").asDouble());
+                    newAnimeList.add(anime);
+                }
+
+                handler.post(() -> {
+                    animeList.addAll(newAnimeList);
+                    Log.d("HomeFragment", "Number of anime in the newlist: " + newAnimeList.size());
+                    Log.d("HomeFragment", "Number of anime in the list: " + animeList.size());
+                    animeAdapter.notifyDataSetChanged();
+                    isLoading = false;
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                handler.post(() -> {
+                    Toast.makeText(getContext(), "Failed to fetch anime data", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 }
