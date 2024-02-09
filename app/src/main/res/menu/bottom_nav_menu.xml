@@ -5,9 +5,9 @@
         android:icon="@drawable/home"
         android:title="Top" />
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_favorites"
         android:icon="@drawable/home"
-        android:title="Dashboard" />
+        android:title="Favorites" />
     <item
         android:id="@+id/navigation_notifications"
         android:icon="@drawable/home"

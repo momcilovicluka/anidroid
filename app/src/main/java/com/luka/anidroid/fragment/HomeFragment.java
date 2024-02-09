@@ -48,21 +48,9 @@ public class HomeFragment extends Fragment {
     private static final String STATE_CURRENT_PAGE = "state_current_page";
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(STATE_ANIME_LIST, new ArrayList<>(animeList));
-        outState.putInt(STATE_CURRENT_PAGE, currentPage);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            animeList = savedInstanceState.getParcelableArrayList(STATE_ANIME_LIST);
-            currentPage = savedInstanceState.getInt(STATE_CURRENT_PAGE);
-        } else {
             animeList = new ArrayList<>();
             currentPage = 1;
-        }
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -78,7 +66,7 @@ public class HomeFragment extends Fragment {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 1) {
+                if (!isLoading && layoutManager.findLastCompletelyVisibleItemPosition() == animeList.size() - 3) {
                     isLoading = true;
                     loadAnimeData(currentPage++);
                 }

@@ -5,11 +5,29 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 
-public class Anime implements Parcelable {
+public class Anime implements Serializable, Comparable<Anime>{
+    public boolean isFavourite() {
+        return isFavourite;
+    }
+
+    public void setFavourite(boolean favourite) {
+        isFavourite = favourite;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    private boolean isFavourite;
     private int id;
     private String url;
     private double averageScore;
@@ -34,7 +52,8 @@ public class Anime implements Parcelable {
     public Anime() {
     }
 
-    public Anime(int id, int averageScore, int duration, Date startDate, Date endDate, int episodes, int popularity, int seasonYear, String title, String titleNative, String titleRomaji, String format, String season, String status, String type, List<String> genres, List<String> tags, String imageUrl, String description) {
+    public Anime(boolean isFavourite, int id, int averageScore, int duration, Date startDate, Date endDate, int episodes, int popularity, int seasonYear, String title, String titleNative, String titleRomaji, String format, String season, String status, String type, List<String> genres, List<String> tags, String imageUrl, String description) {
+        this.isFavourite = isFavourite;
         this.id = id;
         this.averageScore = averageScore;
         this.duration = duration;
@@ -76,18 +95,6 @@ public class Anime implements Parcelable {
         imageUrl = in.readString();
         description = in.readString();
     }
-
-    public static final Creator<Anime> CREATOR = new Creator<Anime>() {
-        @Override
-        public Anime createFromParcel(Parcel in) {
-            return new Anime(in);
-        }
-
-        @Override
-        public Anime[] newArray(int size) {
-            return new Anime[size];
-        }
-    };
 
     public int getId() {
         return id;
@@ -241,34 +248,21 @@ public class Anime implements Parcelable {
         this.description = description;
     }
 
-    /**
-     * Describe the kinds of special objects contained in this Parcelable
-     * instance's marshaled representation. For example, if the object will
-     * include a file descriptor in the output of {@link #writeToParcel(Parcel, int)},
-     * the return value of this method must include the
-     * {@link #CONTENTS_FILE_DESCRIPTOR} bit.
-     *
-     * @return a bitmask indicating the set of special object types marshaled
-     * by this Parcelable object instance.
-     */
     @Override
-    public int describeContents() {
-        return 0;
+    public int compareTo(Anime o) {
+        return this.getId() - o.getId();
     }
 
-    /**
-     * Flatten this object in to a Parcel.
-     *
-     * @param dest  The Parcel in which the object should be written.
-     * @param flags Additional flags about how the object should be written.
-     *              May be 0 or {@link #PARCELABLE_WRITE_RETURN_VALUE}.
-     */
     @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeInt(id);
-        dest.writeString(title);
-        dest.writeString(description);
-        dest.writeString(imageUrl);
-        dest.writeDouble(averageScore);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Anime anime = (Anime) o;
+        return id == anime.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.luka.anidroid.R;
+import com.luka.anidroid.fragment.FavoritesFragment;
 import com.luka.anidroid.fragment.HomeFragment;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     BottomNavigationView bottomNavigationView;
+    HomeFragment homeFragment = new HomeFragment();
+    FavoritesFragment favoritesFragment = new FavoritesFragment();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +50,9 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
 
             if (item.getItemId() == R.id.navigation_home) {
-                selectedFragment = new HomeFragment();
-            } else if (item.getItemId() == R.id.navigation_profile) {
-                //selectedFragment = new ProfileFragment();
+                selectedFragment = homeFragment;
+            } else if (item.getItemId() == R.id.navigation_favorites) {
+                selectedFragment = favoritesFragment;
             } else if (item.getItemId() == R.id.navigation_settings) {
                 //selectedFragment = new SettingsFragment();
             }

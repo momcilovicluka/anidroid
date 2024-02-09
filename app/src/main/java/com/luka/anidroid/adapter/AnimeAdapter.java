@@ -1,5 +1,6 @@
 package com.luka.anidroid.adapter;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.luka.anidroid.R;
+import com.luka.anidroid.activity.AnimeDetailsActivity;
 import com.luka.anidroid.model.Anime;
 
 import java.util.List;
@@ -64,7 +66,13 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
         return animeList.size();
     }
 
-    public static class AnimeViewHolder extends RecyclerView.ViewHolder {
+    public void updateData(List<Anime> favoriteAnimes) {
+        animeList.clear();
+        animeList.addAll(favoriteAnimes);
+        notifyDataSetChanged();
+    }
+
+    public class AnimeViewHolder extends RecyclerView.ViewHolder {
         ImageView animeImage;
         TextView animeTitle;
         TextView animeDescription;
@@ -77,6 +85,13 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
             animeDescription = itemView.findViewById(R.id.anime_description);
             animeImage = itemView.findViewById(R.id.anime_image);
             animeScore = itemView.findViewById(R.id.anime_score);
+
+            itemView.setOnClickListener(v -> {
+                Anime anime = animeList.get(getAdapterPosition());
+                Intent intent = new Intent(itemView.getContext(), AnimeDetailsActivity.class);
+                intent.putExtra("anime", anime);
+                itemView.getContext().startActivity(intent);
+            });
         }
     }
 }
