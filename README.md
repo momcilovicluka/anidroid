@@ -15,7 +15,7 @@ AniDroid is an Android application that allows users to browse and discover anim
 
 To install AniDroid on your Android device, follow these steps:
 
-1. Download the latest APK file from the [releases](https://github.com/your-username/anidroid/releases) page.
+1. Download the latest APK file from the [releases](https://github.com/momcilovicluka/anidroid/releases) page.
 2. Enable installation from unknown sources in your device settings.
 3. Open the downloaded APK file and follow the on-screen instructions to install the app.
 
@@ -33,7 +33,7 @@ AniDroid relies on the following libraries and tools:
 
 ## Contributing
 
-Contributions to AniDroid are welcome! If you encounter any bugs, have feature requests, or want to contribute code, please submit an issue or pull request to the [GitHub repository](https://github.com/your-username/anidroid).
+Contributions to AniDroid are welcome! If you encounter any bugs, have feature requests, or want to contribute code, please submit an issue or pull request to the [GitHub repository](https://github.com/momcilovicluka/anidroid).
 
 ## License
 
