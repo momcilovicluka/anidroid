@@ -9,7 +9,7 @@
 
     <ImageView
         android:id="@+id/anime_image"
-        android:layout_width="wrap_content"
+        android:layout_width="125dp"
         android:layout_height="200dp"
         android:scaleType="centerCrop" />
 
@@ -31,14 +31,5 @@
         app:layout_constraintLeft_toRightOf="@id/anime_image"
         app:layout_constraintTop_toBottomOf="@id/anime_title"
         android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/anime_description"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@+id/anime_image"
-        app:layout_constraintTop_toBottomOf="@+id/anime_title"
-        tools:layout_editor_absoluteX="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
