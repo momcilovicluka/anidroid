@@ -6,18 +6,6 @@
         android:title="Top" />
     <item
         android:id="@+id/navigation_favorites"
-        android:icon="@drawable/home"
+        android:icon="@drawable/heart"
         android:title="Favorites" />
-    <item
-        android:id="@+id/navigation_notifications"
-        android:icon="@drawable/home"
-        android:title="Notifications" />
-    <item
-        android:id="@+id/navigation_profile"
-        android:icon="@drawable/home"
-        android:title="Profile" />
-    <item
-        android:id="@+id/navigation_settings"
-        android:icon="@drawable/home"
-        android:title="Settings" />
 </menu>

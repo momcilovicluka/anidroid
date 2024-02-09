@@ -127,6 +127,7 @@ public class HomeFragment extends Fragment {
                     anime.setTrailerUrl(animeNode.get("trailer").get("embed_url").asText());
                     anime.setBroadcastDay(animeNode.get("broadcast").get("day").asText());
                     anime.setBroadcastDay(anime.getBroadcastDay().substring(0, anime.getBroadcastDay().length() - 1));
+                    anime.setUrl(animeNode.get("url").asText());
                     newAnimeList.add(anime);
                 }
 

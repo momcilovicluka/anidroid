@@ -19,10 +19,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:singleLine="false"
-        app:layout_constraintStart_toEndOf="@id/anime_image"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toRightOf="@id/anime_image"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="@id/anime_image"
         android:textSize="18sp" />
 

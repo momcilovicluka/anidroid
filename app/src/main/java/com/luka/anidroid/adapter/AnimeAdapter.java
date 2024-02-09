@@ -43,12 +43,12 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
         if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(anime.getImageUrl())
-                    .placeholder(R.drawable.ic_launcher_foreground) // Show placeholder while image is loading
+                    .placeholder(R.drawable.woman) // Show placeholder while image is loading
                     .error(R.drawable.ic_launcher_foreground) // Show placeholder if there's an error loading the image
                     .into(holder.animeImage);
         } else {
             Glide.with(holder.itemView.getContext())
-                    .load(R.drawable.ic_launcher_foreground)
+                    .load(R.drawable.woman)
                     .into(holder.animeImage);
         }
         holder.animeScore.setText(String.valueOf(anime.getAverageScore()));
