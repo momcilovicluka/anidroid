@@ -36,14 +36,34 @@
         android:textSize="14sp" />
 
     <TextView
+        android:id="@+id/anime_episodes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/anime_description"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/anime_broadcast_day"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/anime_episodes"
+        android:textSize="14sp" />
+
+    <TextView
         android:id="@+id/anime_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/anime_broadcast_day"
+        app:layout_constraintTop_toBottomOf="@id/anime_score"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/anime_score"/>
+        tools:layout_editor_absoluteX="16dp" />
 
     <Button
         android:id="@+id/btn_favorite"

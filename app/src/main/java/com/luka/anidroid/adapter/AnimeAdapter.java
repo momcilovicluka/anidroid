@@ -78,6 +78,8 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
         TextView animeDescription;
         TextView animeYear;
         TextView animeScore;
+        TextView animeBroadcastDay;
+        TextView animeEpisodes;
 
         public AnimeViewHolder(View itemView) {
             super(itemView);
@@ -85,6 +87,8 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
             animeDescription = itemView.findViewById(R.id.anime_description);
             animeImage = itemView.findViewById(R.id.anime_image);
             animeScore = itemView.findViewById(R.id.anime_score);
+            animeBroadcastDay = itemView.findViewById(R.id.anime_broadcast_day);
+            animeEpisodes = itemView.findViewById(R.id.anime_episodes);
 
             itemView.setOnClickListener(v -> {
                 Anime anime = animeList.get(getAdapterPosition());

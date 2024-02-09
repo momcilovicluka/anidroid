@@ -48,6 +48,33 @@ public class Anime implements Serializable, Comparable<Anime>{
     private List<String> tags;
     private String imageUrl;
     private String description;
+    private boolean isAiring;
+    private String trailerUrl;
+    private String broadcastDay;
+
+    public String getTrailerUrl() {
+        return trailerUrl;
+    }
+
+    public void setTrailerUrl(String trailerUrl) {
+        this.trailerUrl = trailerUrl;
+    }
+
+    public String getBroadcastDay() {
+        return broadcastDay;
+    }
+
+    public void setBroadcastDay(String broadcastDay) {
+        this.broadcastDay = broadcastDay;
+    }
+
+    public boolean isAiring() {
+        return isAiring;
+    }
+
+    public void setAiring(boolean airing) {
+        isAiring = airing;
+    }
 
     public Anime() {
     }

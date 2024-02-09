@@ -120,8 +120,13 @@ public class HomeFragment extends Fragment {
                     anime.setId(animeNode.get("mal_id").asInt());
                     anime.setTitle(animeNode.get("title").asText());
                     anime.setDescription(animeNode.get("synopsis").asText());
-                    anime.setImageUrl(animeNode.get("images").get("jpg").get("image_url").asText());
+                    anime.setImageUrl(animeNode.get("images").get("jpg").get("large_image_url").asText());
                     anime.setAverageScore(animeNode.get("score").asDouble());
+                    anime.setAiring(animeNode.get("airing").asBoolean());
+                    anime.setEpisodes(animeNode.get("episodes").asInt());
+                    anime.setTrailerUrl(animeNode.get("trailer").get("embed_url").asText());
+                    anime.setBroadcastDay(animeNode.get("broadcast").get("day").asText());
+                    anime.setBroadcastDay(anime.getBroadcastDay().substring(0, anime.getBroadcastDay().length() - 1));
                     newAnimeList.add(anime);
                 }
 

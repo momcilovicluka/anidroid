@@ -33,6 +33,8 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         TextView titleTextView = findViewById(R.id.anime_title);
         TextView descriptionTextView = findViewById(R.id.anime_description);
         TextView scoreTextView = findViewById(R.id.anime_score);
+        TextView broadcastDayTextView = findViewById(R.id.anime_broadcast_day);
+        TextView episodesTextView = findViewById(R.id.anime_episodes);
         favoriteButton = findViewById(R.id.btn_favorite);
 
         if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
@@ -49,6 +51,8 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         titleTextView.setText(anime.getTitle());
         descriptionTextView.setText(anime.getDescription());
         scoreTextView.setText(String.valueOf(anime.getAverageScore()));
+        broadcastDayTextView.setText(anime.getBroadcastDay());
+        episodesTextView.setText(String.valueOf(anime.getEpisodes()));
 
         favoriteButton.setOnClickListener(v -> {
             if (favoritesManager.isFavorite(anime)) {
