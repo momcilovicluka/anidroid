@@ -9,6 +9,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         PeriodicWorkRequest checkAnimeWorkRequest = new PeriodicWorkRequest.Builder(CheckAnimeWorker.class, 1, TimeUnit.DAYS)
                 .build();
-        WorkManager.getInstance(this).enqueue(checkAnimeWorkRequest);
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("CheckAnime", ExistingPeriodicWorkPolicy.KEEP, checkAnimeWorkRequest);
     }
 
     @Override
