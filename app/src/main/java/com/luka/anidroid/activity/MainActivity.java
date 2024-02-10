@@ -18,6 +18,7 @@ import com.luka.anidroid.CheckAnimeWorker;
 import com.luka.anidroid.R;
 import com.luka.anidroid.fragment.FavoritesFragment;
 import com.luka.anidroid.fragment.HomeFragment;
+import com.luka.anidroid.fragment.SearchFragment;
 
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     BottomNavigationView bottomNavigationView;
     HomeFragment homeFragment = new HomeFragment();
     FavoritesFragment favoritesFragment = new FavoritesFragment();
+    SearchFragment searchFragment = new SearchFragment();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 selectedFragment = homeFragment;
             } else if (item.getItemId() == R.id.navigation_favorites) {
                 selectedFragment = favoritesFragment;
+            } else if (item.getItemId() == R.id.action_search) {
+                selectedFragment = searchFragment;
             }
 
             // Replace the current fragment with the selected one
