@@ -14,6 +14,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -31,27 +33,47 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luka.anidroid.R;
+import com.luka.anidroid.adapter.MusicVideoAdapter;
 import com.luka.anidroid.manager.FavoritesManager;
 import com.luka.anidroid.model.Anime;
+import com.luka.anidroid.model.MusicVideo;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class AnimeDetailsActivity extends AppCompatActivity {
 
     private FavoritesManager favoritesManager;
     private Anime anime;
     private Button favoriteButton;
-
+    List<MusicVideo> musicVideos;
+    OkHttpClient client = new OkHttpClient();
+    ObjectMapper objectMapper = new ObjectMapper();
+    MusicVideoAdapter musicVideoAdapter;
     private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 1;
     private static final int WRITE_CALENDAR_PERMISSION_REQUEST_CODE = 2;
 
@@ -155,6 +177,12 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         });
         TextView episodesTextView = findViewById(R.id.anime_episodes);
         favoriteButton = findViewById(R.id.btn_favorite);
+        TextView durationTextView = findViewById(R.id.anime_duration);
+        TextView popularityTextView = findViewById(R.id.anime_popularity);
+        TextView titleNativeTextView = findViewById(R.id.anime_title_native);
+        TextView seasonTextView = findViewById(R.id.anime_season);
+        TextView statusTextView = findViewById(R.id.anime_status);
+        TextView typeTextView = findViewById(R.id.anime_type);
 
         if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
             Glide.with(this)
@@ -168,10 +196,16 @@ public class AnimeDetailsActivity extends AppCompatActivity {
                     .into(imageView);
         }
         titleTextView.setText(anime.getTitle());
-        descriptionTextView.setText(anime.getDescription());
-        scoreTextView.setText(String.valueOf(anime.getAverageScore()));
-        broadcastDayTextView.setText(anime.getBroadcastDay());
-        episodesTextView.setText(String.valueOf(anime.getEpisodes()));
+        descriptionTextView.setText("Description: " + anime.getDescription());
+        scoreTextView.setText("Score: " + String.valueOf(anime.getAverageScore()));
+        broadcastDayTextView.setText("Broadcast day: " + anime.getBroadcastDay());
+        episodesTextView.setText("Number of episodes: " + String.valueOf(anime.getEpisodes()));
+        durationTextView.setText("Duration: " + anime.getDuration());
+        popularityTextView.setText("Popularity: " + String.valueOf(anime.getPopularity()));
+        titleNativeTextView.setText("Title (native): " + anime.getTitleNative());
+        seasonTextView.setText("Season: " + anime.getSeason());
+        statusTextView.setText("Status: " + anime.getStatus());
+        typeTextView.setText("Type: " + anime.getType());
 
         favoriteButton.setOnClickListener(v -> {
             if (favoritesManager.isFavorite(anime)) {
@@ -185,6 +219,65 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         });
 
         updateFavoriteButton();
+
+        RecyclerView musicVideoRecyclerView = findViewById(R.id.music_video_recycler_view);
+        musicVideoRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        musicVideos = new ArrayList<>();
+        fetchMusicVideos(anime.getId());
+        musicVideoAdapter = new MusicVideoAdapter(musicVideos, this);
+        musicVideoRecyclerView.setAdapter(musicVideoAdapter);
+    }
+
+    private void fetchMusicVideos(int id) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+            try {
+                Request request = new Request.Builder()
+                        .url("https://api.jikan.moe/v4/anime/" + id + "/videos")
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                String responseBody = response.body().string();
+
+                // if the response is not successful, throw an exception
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+                Log.d("HomeFragment", "Response: " + responseBody);
+
+                JsonNode root = objectMapper.readTree(responseBody);
+                List<MusicVideo> newAnimeList = new ArrayList<>();
+
+                JsonNode data = root.get("data");
+                Log.d("HomeFragment", "Data: " + data.toString());
+                Log.d("HomeFragment", "Music videos: " + data.get("music_videos").toString());
+                JsonNode musicVideosNode = data.get("music_videos");
+
+                for (JsonNode animeVideoNode : musicVideosNode) {
+                    MusicVideo animeMusicVideo = new MusicVideo();
+                    animeMusicVideo.setTitle(animeVideoNode.get("title").asText());
+                    animeMusicVideo.setImageUrl(animeVideoNode.get("video").get("images").get("maximum_image_url").asText());
+                    animeMusicVideo.setVideoUrl(animeVideoNode.get("video").get("embed_url").asText());
+                    newAnimeList.add(animeMusicVideo);
+                }
+
+                handler.post(() -> {
+                    musicVideos.clear();
+                    musicVideos.addAll(newAnimeList);
+                    Log.d("HomeFragment", "Number of anime in the newlist: " + newAnimeList.size());
+                    Log.d("HomeFragment", "Number of anime in the list: " + musicVideos.size());
+                    musicVideoAdapter.notifyDataSetChanged();
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                handler.post(() -> {
+                    Toast.makeText(this, "Failed to fetch music videos", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
     private void updateFavoriteButton() {
         if (favoritesManager.isFavorite(anime)) {

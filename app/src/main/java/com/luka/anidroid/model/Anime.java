@@ -31,7 +31,7 @@ public class Anime implements Serializable, Comparable<Anime>{
     private int id;
     private String url;
     private double averageScore;
-    private int duration;
+    private String duration;
     private Date startDate;
     private Date endDate;
     private int episodes;
@@ -79,7 +79,7 @@ public class Anime implements Serializable, Comparable<Anime>{
     public Anime() {
     }
 
-    public Anime(boolean isFavourite, int id, int averageScore, int duration, Date startDate, Date endDate, int episodes, int popularity, int seasonYear, String title, String titleNative, String titleRomaji, String format, String season, String status, String type, List<String> genres, List<String> tags, String imageUrl, String description) {
+    public Anime(boolean isFavourite, int id, int averageScore, String duration, Date startDate, Date endDate, int episodes, int popularity, int seasonYear, String title, String titleNative, String titleRomaji, String format, String season, String status, String type, List<String> genres, List<String> tags, String imageUrl, String description) {
         this.isFavourite = isFavourite;
         this.id = id;
         this.averageScore = averageScore;
@@ -106,7 +106,7 @@ public class Anime implements Serializable, Comparable<Anime>{
         id = in.readInt();
         url = in.readString();
         averageScore = in.readInt();
-        duration = in.readInt();
+        duration = in.readString();
         episodes = in.readInt();
         popularity = in.readInt();
         seasonYear = in.readInt();
@@ -139,11 +139,11 @@ public class Anime implements Serializable, Comparable<Anime>{
         this.averageScore = averageScore;
     }
 
-    public int getDuration() {
+    public String getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 

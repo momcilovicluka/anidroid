@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luka.anidroid.R;
 import com.luka.anidroid.adapter.AnimeAdapter;
 import com.luka.anidroid.model.Anime;
+import com.luka.anidroid.model.SearchViewModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +40,7 @@ public class SearchFragment extends Fragment {
     private SearchView searchView;
     private RecyclerView recyclerView;
     private AnimeAdapter animeAdapter;
+    private SearchViewModel searchViewModel;
 
     OkHttpClient client = new OkHttpClient();
     ObjectMapper objectMapper = new ObjectMapper();
@@ -49,6 +52,8 @@ public class SearchFragment extends Fragment {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.activity_search, container, false);
         recyclerView = view.findViewById(R.id.recycler_view);
+
+        searchViewModel = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
 
         animeList = new ArrayList<>();
         animeAdapter = new AnimeAdapter(animeList);
@@ -122,6 +127,14 @@ public class SearchFragment extends Fragment {
                     anime.setBroadcastDay(animeNode.get("broadcast").get("day").asText());
                     anime.setBroadcastDay(anime.getBroadcastDay().substring(0, anime.getBroadcastDay().length() - 1));
                     anime.setUrl(animeNode.get("url").asText());
+
+                    anime.setDuration(animeNode.get("duration").asText());
+                    anime.setPopularity(animeNode.get("popularity").asInt());
+                    anime.setTitleNative(animeNode.get("title_japanese").asText());
+                    anime.setTitleRomaji(animeNode.get("title_english").asText());
+                    anime.setSeason(animeNode.get("season").asText());
+                    anime.setStatus(animeNode.get("status").asText());
+                    anime.setType(animeNode.get("type").asText());
                     newAnimeList.add(anime);
                 }
 
@@ -130,7 +143,7 @@ public class SearchFragment extends Fragment {
                     animeList.addAll(newAnimeList);
                     Log.d("HomeFragment", "Number of anime in the newlist: " + newAnimeList.size());
                     Log.d("HomeFragment", "Number of anime in the list: " + animeList.size());
-                    //animeAdapter.notifyDataSetChanged();
+                    searchViewModel.setSearchResults(animeList);
                     animeAdapter.notifyDataSetChanged();
                 });
 
@@ -141,5 +154,16 @@ public class SearchFragment extends Fragment {
                 });
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // When the fragment is resumed, retrieve the search results from the ViewModel
+        List<Anime> savedSearchResults = searchViewModel.getSearchResults().getValue();
+        if (savedSearchResults != null) {
+            animeAdapter.updateData(savedSearchResults);
+        }
     }
 }

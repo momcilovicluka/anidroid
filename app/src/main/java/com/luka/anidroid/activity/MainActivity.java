@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             return true;
         });
 
+        lastThemeChangeTime = System.currentTimeMillis();
+
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
             Sensor lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
