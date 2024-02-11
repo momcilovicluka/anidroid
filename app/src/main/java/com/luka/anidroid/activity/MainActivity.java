@@ -25,7 +25,7 @@ import com.luka.anidroid.fragment.SearchFragment;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-    private static final float LIGHT_THRESHOLD = 80.0f;
+    private static final float LIGHT_THRESHOLD = 20.0f;
     private static final long THEME_CHANGE_COOLDOWN = 5000; // Cooldown in milliseconds
     private long lastThemeChangeTime = 0;
 
