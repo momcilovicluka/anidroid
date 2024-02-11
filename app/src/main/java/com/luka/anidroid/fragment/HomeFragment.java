@@ -112,6 +112,8 @@ public class HomeFragment extends Fragment {
                     jsonArray = new JSONArray(data.toString());
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
+                } catch (NullPointerException e) {
+                    return;
                 }
 
                 for (int i = 0; i < jsonArray.length(); i++) {

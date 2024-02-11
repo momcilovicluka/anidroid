@@ -1,10 +1,12 @@
 package com.luka.anidroid.activity;
 
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -30,16 +32,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        // Save the state of your activity or any data you want to retain
-        // For example, you can save the selected item id of the BottomNavigationView
         outState.putInt("selectedItemId", bottomNavigationView.getSelectedItemId());
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        // Restore the saved state of your activity or any data
-        // For example, you can restore the selected item id of the BottomNavigationView
         int selectedItemId = savedInstanceState.getInt("selectedItemId");
         bottomNavigationView.setSelectedItemId(selectedItemId);
     }
@@ -55,12 +53,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         // Set HomeFragment as default fragment
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, favoritesFragment).commit();
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         // Set home item as selected
-        bottomNavigationView.setSelectedItemId(R.id.navigation_home);
+        bottomNavigationView.setSelectedItemId(R.id.navigation_favorites);
+
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                handleSendText(intent); // Handle text being sent
+            }
+        }
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -111,6 +119,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 lastThemeChangeTime = currentTime;
             }
+        }
+    }
+
+    void handleSendText(Intent intent) {
+        String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (sharedText != null) {
+
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, searchFragment).commit();
+            bottomNavigationView.setSelectedItemId(R.id.action_search);
+            EditText searchEditText = findViewById(R.id.search_view);
+
+            searchFragment.searchAnime(sharedText);
         }
     }
 

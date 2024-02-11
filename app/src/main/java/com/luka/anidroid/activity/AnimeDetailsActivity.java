@@ -19,6 +19,7 @@ import android.os.Looper;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.webkit.URLUtil;
@@ -57,6 +58,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +76,7 @@ public class AnimeDetailsActivity extends AppCompatActivity {
     OkHttpClient client = new OkHttpClient();
     ObjectMapper objectMapper = new ObjectMapper();
     MusicVideoAdapter musicVideoAdapter;
+    private TextToSpeech textToSpeech;
     private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 1;
     private static final int WRITE_CALENDAR_PERMISSION_REQUEST_CODE = 2;
 
@@ -85,6 +88,12 @@ public class AnimeDetailsActivity extends AppCompatActivity {
 
         favoritesManager = new FavoritesManager(this);
         anime = (Anime) getIntent().getSerializableExtra("anime");
+
+        textToSpeech = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.ERROR) {
+                textToSpeech.setLanguage(Locale.US);
+            }
+        });
 
         ImageView imageView = findViewById(R.id.anime_image);
         imageView.setOnClickListener(new View.OnClickListener() {
@@ -146,6 +155,16 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         });
 
         TextView descriptionTextView = findViewById(R.id.anime_description);
+        descriptionTextView.setOnClickListener(v -> {
+            if (textToSpeech.isSpeaking()) {
+                textToSpeech.stop();
+            } else {
+                String description = descriptionTextView.getText().toString();
+                textToSpeech.setLanguage(Locale.US);
+                textToSpeech.speak(description, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
+
         TextView scoreTextView = findViewById(R.id.anime_score);
         scoreTextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -180,6 +199,15 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         TextView durationTextView = findViewById(R.id.anime_duration);
         TextView popularityTextView = findViewById(R.id.anime_popularity);
         TextView titleNativeTextView = findViewById(R.id.anime_title_native);
+        titleNativeTextView.setOnClickListener(v -> {
+            if (textToSpeech.isSpeaking()) {
+                textToSpeech.stop();
+            } else {
+                String titleNative = titleNativeTextView.getText().toString();
+                textToSpeech.setLanguage(Locale.JAPANESE);
+                textToSpeech.speak(titleNative, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
         TextView seasonTextView = findViewById(R.id.anime_season);
         TextView statusTextView = findViewById(R.id.anime_status);
         TextView typeTextView = findViewById(R.id.anime_type);
@@ -272,6 +300,11 @@ public class AnimeDetailsActivity extends AppCompatActivity {
                 });
 
             } catch (IOException e) {
+                e.printStackTrace();
+                handler.post(() -> {
+                    Toast.makeText(this, "Failed to fetch music videos", Toast.LENGTH_SHORT).show();
+                });
+            } catch (Exception e) {
                 e.printStackTrace();
                 handler.post(() -> {
                     Toast.makeText(this, "Failed to fetch music videos", Toast.LENGTH_SHORT).show();
@@ -381,5 +414,14 @@ public class AnimeDetailsActivity extends AppCompatActivity {
             default:
                 return -1; // Invalid broadcast day
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+        super.onDestroy();
     }
 }
