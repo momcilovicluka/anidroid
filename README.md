@@ -1,5 +1,9 @@
 # AniDroid 📺
 
+![GitHub Repo stars](https://img.shields.io/github/stars/momcilovicluka/anidroid?style=for-the-badge&color=0000ff) 
+![GitHub last commit](https://img.shields.io/github/last-commit/momcilovicluka/anidroid?style=for-the-badge&color=0000ff) 
+![GitHub repo size](https://img.shields.io/github/repo-size/momcilovicluka/anidroid?style=for-the-badge&color=0000ff)
+
 AniDroid is an Android application that allows users to browse and discover anime content. It fetches anime data from Jikan API and presents it in a user-friendly interface.
 
 ## Features 🚀
