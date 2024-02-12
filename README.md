@@ -41,7 +41,7 @@ AniDroid relies on the following libraries and tools:
 
 ## Contributing 🤝
 
-Contributions to AniDroid are welcome! If you encounter any bugs, have feature requests, or want to contribute code, please submit an issue or pull request to the [GitHub repository](https://github.com/momcilovicluka/anidroid).
+Contributions to AniDroid are welcome! If you encounter any bugs, have feature requests, or want to contribute code, please submit an issue or pull request to the [GitHub repository](https://github.com/momcilovicluka/anidroid/issues).
 
 ## License 📜
 
