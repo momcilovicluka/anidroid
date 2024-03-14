@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,6 +27,7 @@ import com.luka.anidroid.adapter.AnimeAdapter;
 import com.luka.anidroid.manager.FavoritesManager;
 import com.luka.anidroid.model.Anime;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -37,6 +39,18 @@ public class FavoritesFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = initializeFields(inflater, container);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(animeAdapter);
+
+        InitializeSwipeRefreshLayout(view);
+
+        return view;
+    }
+
+    @NonNull
+    private View initializeFields(LayoutInflater inflater, ViewGroup container) {
         View view = inflater.inflate(R.layout.fragment_favorites, container, false);
 
         favoritesManager = new FavoritesManager(getContext());
@@ -44,10 +58,10 @@ public class FavoritesFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerView);
         animeAdapter = new AnimeAdapter(favoriteAnimes);
+        return view;
+    }
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(animeAdapter);
-
+    private void InitializeSwipeRefreshLayout(View view) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -55,8 +69,6 @@ public class FavoritesFragment extends Fragment {
                 refreshDataAndCheckForNotifications();
             }
         });
-
-        return view;
     }
 
     private void refreshDataAndCheckForNotifications() {
@@ -111,7 +123,7 @@ public class FavoritesFragment extends Fragment {
 
         // Create an intent that will be fired when the user taps the notification
         Intent intent = new Intent(getContext(), AnimeDetailsActivity.class);
-        intent.putExtra("anime", anime);
+        intent.putExtra("anime", (Serializable) anime);
         PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         // Create the notification
