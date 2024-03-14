@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 
-public class Anime implements Serializable, Comparable<Anime>{
+public class Anime implements Parcelable, Serializable, Comparable<Anime>{
     public boolean isFavourite() {
         return isFavourite;
     }
@@ -105,7 +105,7 @@ public class Anime implements Serializable, Comparable<Anime>{
     protected Anime(Parcel in) {
         id = in.readInt();
         url = in.readString();
-        averageScore = in.readInt();
+        averageScore = in.readDouble();
         duration = in.readString();
         episodes = in.readInt();
         popularity = in.readInt();
@@ -292,4 +292,43 @@ public class Anime implements Serializable, Comparable<Anime>{
     public int hashCode() {
         return id;
     }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(url);
+        dest.writeDouble(averageScore);
+        dest.writeString(duration);
+        dest.writeInt(episodes);
+        dest.writeInt(popularity);
+        dest.writeInt(seasonYear);
+        dest.writeString(title);
+        dest.writeString(titleNative);
+        dest.writeString(titleRomaji);
+        dest.writeString(format);
+        dest.writeString(season);
+        dest.writeString(status);
+        dest.writeString(type);
+        dest.writeStringList(genres);
+        dest.writeStringList(tags);
+        dest.writeString(imageUrl);
+        dest.writeString(description);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Anime> CREATOR = new Creator<Anime>() {
+        @Override
+        public Anime createFromParcel(Parcel in) {
+            return new Anime(in);
+        }
+
+        @Override
+        public Anime[] newArray(int size) {
+            return new Anime[size];
+        }
+    };
 }
