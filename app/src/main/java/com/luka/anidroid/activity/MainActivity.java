@@ -27,6 +27,10 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private static final float LIGHT_THRESHOLD = 20.0f;
     private static final long THEME_CHANGE_COOLDOWN = 5000; // Cooldown in milliseconds
+    BottomNavigationView bottomNavigationView;
+    HomeFragment homeFragment = new HomeFragment();
+    FavoritesFragment favoritesFragment = new FavoritesFragment();
+    SearchFragment searchFragment = new SearchFragment();
     private long lastThemeChangeTime = 0;
 
     @Override
@@ -42,11 +46,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         bottomNavigationView.setSelectedItemId(selectedItemId);
     }
 
-    BottomNavigationView bottomNavigationView;
-    HomeFragment homeFragment = new HomeFragment();
-    FavoritesFragment favoritesFragment = new FavoritesFragment();
-    SearchFragment searchFragment = new SearchFragment();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,40 +54,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Set HomeFragment as default fragment
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, favoritesFragment).commit();
 
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        InitializeBottomNavigationView();
 
-        // Set home item as selected
-        bottomNavigationView.setSelectedItemId(R.id.navigation_favorites);
+        checkIfCalledViaIntent();
 
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        String type = intent.getType();
+        hadleSensorThemeChange();
 
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if ("text/plain".equals(type)) {
-                handleSendText(intent); // Handle text being sent
-            }
-        }
+        startBackgroundWorker();
+    }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
+    private void startBackgroundWorker() {
+        PeriodicWorkRequest checkAnimeWorkRequest = new PeriodicWorkRequest.Builder(CheckAnimeWorker.class, 1, TimeUnit.DAYS)
+                .build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("CheckAnime", ExistingPeriodicWorkPolicy.KEEP, checkAnimeWorkRequest);
+    }
 
-            if (item.getItemId() == R.id.navigation_home) {
-                selectedFragment = homeFragment;
-            } else if (item.getItemId() == R.id.navigation_favorites) {
-                selectedFragment = favoritesFragment;
-            } else if (item.getItemId() == R.id.action_search) {
-                selectedFragment = searchFragment;
-            }
-
-            // Replace the current fragment with the selected one
-            if (selectedFragment != null) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFragment).commit();
-            }
-
-            return true;
-        });
-
+    private void hadleSensorThemeChange() {
         lastThemeChangeTime = System.currentTimeMillis();
 
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -98,10 +79,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
             }
         }
+    }
 
-        PeriodicWorkRequest checkAnimeWorkRequest = new PeriodicWorkRequest.Builder(CheckAnimeWorker.class, 1, TimeUnit.DAYS)
-                .build();
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("CheckAnime", ExistingPeriodicWorkPolicy.KEEP, checkAnimeWorkRequest);
+    private void InitializeBottomNavigationView() {
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+
+        // Set home item as selected
+        bottomNavigationView.setSelectedItemId(R.id.navigation_favorites);
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
+
+            if (item.getItemId() == R.id.navigation_home)
+                selectedFragment = homeFragment;
+            else if (item.getItemId() == R.id.navigation_favorites)
+                selectedFragment = favoritesFragment;
+            else if (item.getItemId() == R.id.action_search)
+                selectedFragment = searchFragment;
+
+            // Replace the current fragment with the selected one
+            if (selectedFragment != null)
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFragment).commit();
+
+            return true;
+        });
+    }
+
+    private void checkIfCalledViaIntent() {
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                handleSendText(intent); // Handle text being sent
+            }
+        }
     }
 
     @Override
