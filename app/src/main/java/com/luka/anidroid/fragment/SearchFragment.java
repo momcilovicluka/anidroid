@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -55,16 +56,30 @@ public class SearchFragment extends Fragment {
 
         searchViewModel = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
 
-        animeList = new ArrayList<>();
+        if (savedInstanceState != null) {
+            animeList = savedInstanceState.getParcelableArrayList("searchResults");
+            Log.d("SearchFragment", "Restoring state: " + savedInstanceState.getParcelableArrayList("searchResults"));
+
+        } else {
+            animeList = new ArrayList<>();
+        }
         animeAdapter = new AnimeAdapter(animeList);
         recyclerView.setAdapter(animeAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        initializeSearchView(view);
+
+        // Retrieve the search results from the ViewModel
+        retrieveSearchResults();
+
+        return view;
+    }
+
+    private void initializeSearchView(View view) {
         searchView = view.findViewById(R.id.search_view);
         searchView.setQueryHint("Search for anime");
         searchView.setIconifiedByDefault(false);
         searchView.setFocusable(true);
-
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -80,7 +95,14 @@ public class SearchFragment extends Fragment {
                 return false;
             }
         });
-        return view;
+    }
+
+    private void retrieveSearchResults() {
+        List<Anime> savedSearchResults = searchViewModel.getSearchResults().getValue();
+        if (savedSearchResults != null) {
+            animeList.addAll(savedSearchResults);
+            animeAdapter.notifyDataSetChanged();
+        }
     }
 
     public void searchAnime(String query) {
@@ -89,18 +111,7 @@ public class SearchFragment extends Fragment {
 
         executor.execute(() -> {
             try {
-                Request request = new Request.Builder()
-                        .url("https://api.jikan.moe/v4/anime" + "?q=" + query)
-                        .build();
-
-                Response response = client.newCall(request).execute();
-                String responseBody = response.body().string();
-
-                // if the response is not successful, throw an exception
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
-                }
-                Log.d("HomeFragment", "Response: " + responseBody);
+                String responseBody = makeRequest(query);
 
                 JsonNode root = objectMapper.readTree(responseBody);
                 List<Anime> newAnimeList = new ArrayList<>();
@@ -118,25 +129,7 @@ public class SearchFragment extends Fragment {
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JsonNode animeNode = data.get(i);
                     Anime anime = new Anime();
-                    anime.setId(animeNode.get("mal_id").asInt());
-                    anime.setTitle(animeNode.get("title").asText());
-                    anime.setDescription(animeNode.get("synopsis").asText());
-                    anime.setImageUrl(animeNode.get("images").get("jpg").get("large_image_url").asText());
-                    anime.setAverageScore(animeNode.get("score").asDouble());
-                    anime.setAiring(animeNode.get("airing").asBoolean());
-                    anime.setEpisodes(animeNode.get("episodes").asInt());
-                    anime.setTrailerUrl(animeNode.get("trailer").get("embed_url").asText());
-                    anime.setBroadcastDay(animeNode.get("broadcast").get("day").asText());
-                    anime.setBroadcastDay(anime.getBroadcastDay().substring(0, anime.getBroadcastDay().length() - 1));
-                    anime.setUrl(animeNode.get("url").asText());
-
-                    anime.setDuration(animeNode.get("duration").asText());
-                    anime.setPopularity(animeNode.get("popularity").asInt());
-                    anime.setTitleNative(animeNode.get("title_japanese").asText());
-                    anime.setTitleRomaji(animeNode.get("title_english").asText());
-                    anime.setSeason(animeNode.get("season").asText());
-                    anime.setStatus(animeNode.get("status").asText());
-                    anime.setType(animeNode.get("type").asText());
+                    parseNodeToAnime(anime, animeNode);
                     newAnimeList.add(anime);
                 }
 
@@ -158,14 +151,70 @@ public class SearchFragment extends Fragment {
         });
     }
 
+    @NonNull
+    private String makeRequest(String query) throws IOException {
+        Request request = new Request.Builder()
+                .url("https://api.jikan.moe/v4/anime" + "?q=" + query)
+                .build();
+
+        String responseBody;
+        try (Response response = client.newCall(request).execute()) {
+            responseBody = response.body().string();
+
+            // if the response is not successful, throw an exception
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+        }
+        Log.d("HomeFragment", "Response: " + responseBody);
+        return responseBody;
+    }
+
+    private static void parseNodeToAnime(Anime anime, JsonNode animeNode) {
+        anime.setId(animeNode.get("mal_id").asInt());
+        anime.setTitle(animeNode.get("title").asText());
+        anime.setDescription(animeNode.get("synopsis").asText());
+        anime.setImageUrl(animeNode.get("images").get("jpg").get("large_image_url").asText());
+        anime.setAverageScore(animeNode.get("score").asDouble());
+        anime.setAiring(animeNode.get("airing").asBoolean());
+        anime.setEpisodes(animeNode.get("episodes").asInt());
+        anime.setTrailerUrl(animeNode.get("trailer").get("embed_url").asText());
+        anime.setBroadcastDay(animeNode.get("broadcast").get("day").asText());
+        anime.setBroadcastDay(anime.getBroadcastDay().substring(0, anime.getBroadcastDay().length() - 1));
+        anime.setUrl(animeNode.get("url").asText());
+
+        anime.setDuration(animeNode.get("duration").asText());
+        anime.setPopularity(animeNode.get("popularity").asInt());
+        anime.setTitleNative(animeNode.get("title_japanese").asText());
+        anime.setTitleRomaji(animeNode.get("title_english").asText());
+        anime.setSeason(animeNode.get("season").asText());
+        anime.setStatus(animeNode.get("status").asText());
+        anime.setType(animeNode.get("type").asText());
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-
+        Log.d("SearchFragment", "onResume");
         // When the fragment is resumed, retrieve the search results from the ViewModel
         List<Anime> savedSearchResults = searchViewModel.getSearchResults().getValue();
         if (savedSearchResults != null) {
             animeAdapter.updateData(savedSearchResults);
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("SearchFragment", "onPause");
+        // When the fragment is paused, save the search results to the ViewModel
+        searchViewModel.setSearchResults(animeList);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d("SearchFragment", "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList("searchResults", new ArrayList<>(animeList));
     }
 }
