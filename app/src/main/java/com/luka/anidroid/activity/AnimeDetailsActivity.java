@@ -89,31 +89,131 @@ public class AnimeDetailsActivity extends AppCompatActivity {
         favoritesManager = new FavoritesManager(this);
         anime = (Anime) getIntent().getSerializableExtra("anime");
 
-        textToSpeech = new TextToSpeech(getApplicationContext(), status -> {
-            if (status != TextToSpeech.ERROR) {
-                textToSpeech.setLanguage(Locale.US);
-            }
-        });
+        InitializeTTS();
 
-        ImageView imageView = findViewById(R.id.anime_image);
-        imageView.setOnClickListener(new View.OnClickListener() {
+        ImageView animeImage = InitializeAnimeImage();
+
+        TextView titleTextView = InitializeTitleTextView();
+
+        TextView descriptionTextView = InitializeDescriptionTextView(R.id.anime_description, Locale.US);
+
+        TextView scoreTextView = InitializeScoreTextView();
+
+        TextView broadcastDayTextView = InitializeBroadcastDayTextView();
+
+        TextView episodesTextView = findViewById(R.id.anime_episodes);
+        TextView durationTextView = findViewById(R.id.anime_duration);
+        TextView popularityTextView = findViewById(R.id.anime_popularity);
+        TextView titleNativeTextView = InitializeDescriptionTextView(R.id.anime_title_native, Locale.JAPANESE);
+        TextView seasonTextView = findViewById(R.id.anime_season);
+        TextView statusTextView = findViewById(R.id.anime_status);
+        TextView typeTextView = findViewById(R.id.anime_type);
+
+        setImageOptions(animeImage);
+
+        titleTextView.setText(anime.getTitle());
+        descriptionTextView.setText("Description: " + anime.getDescription());
+        scoreTextView.setText("Score: " + String.valueOf(anime.getAverageScore()));
+        broadcastDayTextView.setText("Broadcast day: " + anime.getBroadcastDay());
+        episodesTextView.setText("Number of episodes: " + String.valueOf(anime.getEpisodes()));
+        durationTextView.setText("Duration: " + anime.getDuration());
+        popularityTextView.setText("Popularity: " + String.valueOf(anime.getPopularity()));
+        titleNativeTextView.setText("Title (native): " + anime.getTitleNative());
+        seasonTextView.setText("Season: " + anime.getSeason());
+        statusTextView.setText("Status: " + anime.getStatus());
+        typeTextView.setText("Type: " + anime.getType());
+
+        InitializeFavoriteButton();
+
+        updateFavoriteButton();
+
+        InitializeMusicVideoView();
+    }
+
+    private void InitializeFavoriteButton() {
+        favoriteButton = findViewById(R.id.btn_favorite);
+        favoriteButton.setOnClickListener(v -> {
+            if (favoritesManager.isFavorite(anime)) {
+                favoritesManager.removeFavorite(anime);
+                Log.d("AnimeDetailsActivity", "Button clicked: Remove from Favorites");
+            } else {
+                favoritesManager.addFavorite(anime);
+                Log.d("AnimeDetailsActivity", "Button clicked: Add to Favorites");
+            }
+            updateFavoriteButton();
+        });
+    }
+
+    private void setImageOptions(ImageView animeImage) {
+        if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
+            Glide.with(this)
+                    .load(anime.getImageUrl())
+                    .placeholder(R.drawable.ic_launcher_foreground) // Show placeholder while image is loading
+                    .error(R.drawable.ic_launcher_foreground) // Show placeholder if there's an error loading the image
+                    .into(animeImage);
+        } else {
+            Glide.with(this)
+                    .load(R.drawable.ic_launcher_foreground)
+                    .into(animeImage);
+        }
+    }
+
+    @NonNull
+    private TextView InitializeBroadcastDayTextView() {
+        TextView broadcastDayTextView = findViewById(R.id.anime_broadcast_day);
+        broadcastDayTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = anime.getTrailerUrl();
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                startActivity(intent);
+                // Check if we have the permission
+                if (ContextCompat.checkSelfPermission(AnimeDetailsActivity.this, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+                    // If not, request the permission
+                    ActivityCompat.requestPermissions(AnimeDetailsActivity.this, new String[]{Manifest.permission.WRITE_CALENDAR}, WRITE_CALENDAR_PERMISSION_REQUEST_CODE);
+                } else {
+                    // If we have the permission, proceed with adding the event to the calendar
+                    addEventToCalendar(anime.getTitle(), anime.getBroadcastDay());
+                }
             }
         });
-        imageView.setOnLongClickListener(new View.OnLongClickListener() {
+        return broadcastDayTextView;
+    }
+
+    @NonNull
+    private TextView InitializeScoreTextView() {
+        TextView scoreTextView = findViewById(R.id.anime_score);
+        scoreTextView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                    BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
-                    Bitmap bitmap = drawable.getBitmap();
-                    saveImageToExternalStorage(bitmap);
-                return true;
+            public void onClick(View v) {
+                String url = anime.getUrl();
+                if (url != null && URLUtil.isValidUrl(url)) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    startActivity(intent);
+                } else {
+                    Log.e("AnimeDetailsActivity", "Invalid URL: " + url);
+                    Toast.makeText(AnimeDetailsActivity.this, "Invalid URL: " + url, Toast.LENGTH_SHORT).show();
+                }
             }
         });
+        return scoreTextView;
+    }
+
+    @NonNull
+    private TextView InitializeDescriptionTextView(int anime_description, @NonNull Locale us) {
+        TextView descriptionTextView = findViewById(anime_description);
+        descriptionTextView.setOnClickListener(v -> {
+            if (textToSpeech.isSpeaking()) {
+                textToSpeech.stop();
+            } else {
+                String description = descriptionTextView.getText().toString();
+                textToSpeech.setLanguage(us);
+                textToSpeech.speak(description, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
+        return descriptionTextView;
+    }
+
+    @NonNull
+    private TextView InitializeTitleTextView() {
         TextView titleTextView = findViewById(R.id.anime_title);
         titleTextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,101 +253,42 @@ public class AnimeDetailsActivity extends AppCompatActivity {
                         });
             }
         });
+        return titleTextView;
+    }
 
-        TextView descriptionTextView = findViewById(R.id.anime_description);
-        descriptionTextView.setOnClickListener(v -> {
-            if (textToSpeech.isSpeaking()) {
-                textToSpeech.stop();
-            } else {
-                String description = descriptionTextView.getText().toString();
+    @NonNull
+    private ImageView InitializeAnimeImage() {
+        ImageView animeImage = findViewById(R.id.anime_image);
+        animeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = anime.getTrailerUrl();
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+            }
+        });
+        animeImage.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                    BitmapDrawable drawable = (BitmapDrawable) animeImage.getDrawable();
+                    Bitmap bitmap = drawable.getBitmap();
+                    saveImageToExternalStorage(bitmap);
+                return true;
+            }
+        });
+        return animeImage;
+    }
+
+    private void InitializeTTS() {
+        textToSpeech = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.ERROR) {
                 textToSpeech.setLanguage(Locale.US);
-                textToSpeech.speak(description, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
+    }
 
-        TextView scoreTextView = findViewById(R.id.anime_score);
-        scoreTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String url = anime.getUrl();
-                if (url != null && URLUtil.isValidUrl(url)) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(url));
-                    startActivity(intent);
-                } else {
-                    Log.e("AnimeDetailsActivity", "Invalid URL: " + url);
-                    Toast.makeText(AnimeDetailsActivity.this, "Invalid URL: " + url, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        TextView broadcastDayTextView = findViewById(R.id.anime_broadcast_day);
-        broadcastDayTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Check if we have the permission
-                if (ContextCompat.checkSelfPermission(AnimeDetailsActivity.this, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-                    // If not, request the permission
-                    ActivityCompat.requestPermissions(AnimeDetailsActivity.this, new String[]{Manifest.permission.WRITE_CALENDAR}, WRITE_CALENDAR_PERMISSION_REQUEST_CODE);
-                } else {
-                    // If we have the permission, proceed with adding the event to the calendar
-                    addEventToCalendar(anime.getTitle(), anime.getBroadcastDay());
-                }
-            }
-        });
-        TextView episodesTextView = findViewById(R.id.anime_episodes);
-        favoriteButton = findViewById(R.id.btn_favorite);
-        TextView durationTextView = findViewById(R.id.anime_duration);
-        TextView popularityTextView = findViewById(R.id.anime_popularity);
-        TextView titleNativeTextView = findViewById(R.id.anime_title_native);
-        titleNativeTextView.setOnClickListener(v -> {
-            if (textToSpeech.isSpeaking()) {
-                textToSpeech.stop();
-            } else {
-                String titleNative = titleNativeTextView.getText().toString();
-                textToSpeech.setLanguage(Locale.JAPANESE);
-                textToSpeech.speak(titleNative, TextToSpeech.QUEUE_FLUSH, null, null);
-            }
-        });
-        TextView seasonTextView = findViewById(R.id.anime_season);
-        TextView statusTextView = findViewById(R.id.anime_status);
-        TextView typeTextView = findViewById(R.id.anime_type);
-
-        if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
-            Glide.with(this)
-                    .load(anime.getImageUrl())
-                    .placeholder(R.drawable.ic_launcher_foreground) // Show placeholder while image is loading
-                    .error(R.drawable.ic_launcher_foreground) // Show placeholder if there's an error loading the image
-                    .into(imageView);
-        } else {
-            Glide.with(this)
-                    .load(R.drawable.ic_launcher_foreground)
-                    .into(imageView);
-        }
-        titleTextView.setText(anime.getTitle());
-        descriptionTextView.setText("Description: " + anime.getDescription());
-        scoreTextView.setText("Score: " + String.valueOf(anime.getAverageScore()));
-        broadcastDayTextView.setText("Broadcast day: " + anime.getBroadcastDay());
-        episodesTextView.setText("Number of episodes: " + String.valueOf(anime.getEpisodes()));
-        durationTextView.setText("Duration: " + anime.getDuration());
-        popularityTextView.setText("Popularity: " + String.valueOf(anime.getPopularity()));
-        titleNativeTextView.setText("Title (native): " + anime.getTitleNative());
-        seasonTextView.setText("Season: " + anime.getSeason());
-        statusTextView.setText("Status: " + anime.getStatus());
-        typeTextView.setText("Type: " + anime.getType());
-
-        favoriteButton.setOnClickListener(v -> {
-            if (favoritesManager.isFavorite(anime)) {
-                favoritesManager.removeFavorite(anime);
-                Log.d("AnimeDetailsActivity", "Button clicked: Remove from Favorites");
-            } else {
-                favoritesManager.addFavorite(anime);
-                Log.d("AnimeDetailsActivity", "Button clicked: Add to Favorites");
-            }
-            updateFavoriteButton();
-        });
-
-        updateFavoriteButton();
-
+    private void InitializeMusicVideoView() {
         RecyclerView musicVideoRecyclerView = findViewById(R.id.music_video_recycler_view);
         musicVideoRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         musicVideos = new ArrayList<>();
