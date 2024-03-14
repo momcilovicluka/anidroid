@@ -16,6 +16,7 @@ import com.luka.anidroid.R;
 import com.luka.anidroid.activity.AnimeDetailsActivity;
 import com.luka.anidroid.model.Anime;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHolder> {
@@ -40,6 +41,11 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
         holder.animeImage.setImageResource(R.drawable.ic_launcher_foreground);
         //holder.animeDescription.setText(anime.getDescription());
         Log.d("AnimeAdapter", "image url: " + anime.getImageUrl());
+        setImageOptions(holder, anime);
+        holder.animeScore.setText(String.valueOf(anime.getAverageScore()));
+    }
+
+    private static void setImageOptions(AnimeViewHolder holder, Anime anime) {
         if (anime.getImageUrl() != null && !anime.getImageUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(anime.getImageUrl())
@@ -51,7 +57,6 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
                     .load(R.drawable.woman)
                     .into(holder.animeImage);
         }
-        holder.animeScore.setText(String.valueOf(anime.getAverageScore()));
     }
 
     @Override
@@ -83,19 +88,23 @@ public class AnimeAdapter extends RecyclerView.Adapter<AnimeAdapter.AnimeViewHol
 
         public AnimeViewHolder(View itemView) {
             super(itemView);
+            InitializeFields(itemView);
+
+            itemView.setOnClickListener(v -> {
+                Anime anime = animeList.get(getAdapterPosition());
+                Intent intent = new Intent(itemView.getContext(), AnimeDetailsActivity.class);
+                intent.putExtra("anime", (Serializable) anime);
+                itemView.getContext().startActivity(intent);
+            });
+        }
+
+        private void InitializeFields(View itemView) {
             animeTitle = itemView.findViewById(R.id.anime_title);
             animeDescription = itemView.findViewById(R.id.anime_description);
             animeImage = itemView.findViewById(R.id.anime_image);
             animeScore = itemView.findViewById(R.id.anime_score);
             animeBroadcastDay = itemView.findViewById(R.id.anime_broadcast_day);
             animeEpisodes = itemView.findViewById(R.id.anime_episodes);
-
-            itemView.setOnClickListener(v -> {
-                Anime anime = animeList.get(getAdapterPosition());
-                Intent intent = new Intent(itemView.getContext(), AnimeDetailsActivity.class);
-                intent.putExtra("anime", anime);
-                itemView.getContext().startActivity(intent);
-            });
         }
     }
 }
