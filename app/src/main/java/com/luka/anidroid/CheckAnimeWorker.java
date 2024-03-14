@@ -18,6 +18,7 @@ import com.luka.anidroid.activity.AnimeDetailsActivity;
 import com.luka.anidroid.manager.FavoritesManager;
 import com.luka.anidroid.model.Anime;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -59,20 +60,7 @@ public class CheckAnimeWorker extends Worker {
         NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (!notificationManager.areNotificationsEnabled()) {
             // Notifications are not enabled. Show a dialog to the user asking them to enable notifications.
-            new AlertDialog.Builder(getApplicationContext())
-                    .setTitle("Enable Notifications")
-                    .setMessage("Please enable notifications to receive updates about your favorite animes.")
-                    .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // Open the application settings screen
-                            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-                            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getApplicationContext().getPackageName());
-                            getApplicationContext().startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            getNotificationPermissions();
             return;
         }
 
@@ -83,7 +71,7 @@ public class CheckAnimeWorker extends Worker {
 
         // Create an intent that will be fired when the user taps the notification
         Intent intent = new Intent(getApplicationContext(), AnimeDetailsActivity.class);
-        intent.putExtra("anime", anime);
+        intent.putExtra("anime", (Serializable) anime);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         // Create the notification
@@ -96,5 +84,23 @@ public class CheckAnimeWorker extends Worker {
 
         // Show the notification
         notificationManager.notify(notificationId, builder.build());
+    }
+
+    private void getNotificationPermissions() {
+        new AlertDialog.Builder(getApplicationContext())
+                .setTitle("Enable Notifications")
+                .setMessage("Please enable notifications to receive updates about your favorite animes.")
+                .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Open the application settings screen
+                        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                        intent.putExtra(Settings.EXTRA_APP_PACKAGE, getApplicationContext().getPackageName());
+                        getApplicationContext().startActivity(intent);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+        return;
     }
 }
